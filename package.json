@@ -1,0 +1,54 @@
+{
+  "name": "auto-loading-scroll-component",
+  "version": "1.0.0",
+  "description": "An Auto Loading on Scroll component in react.",
+  "scripts": {
+   "lint": "eslint src\/**\/*.{ts,tsx,js,jsx}",
+    "lint:fix": "yarn lint --fix",
+    "prettier:check": "prettier --check 'src/**/*'",
+    "prettify": "prettier --write 'src/**/*'"
+    },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zyw2018/Tutorial.git"
+  },
+  "keywords": [
+    "react",
+    "react-component",
+    "scroll",
+    "component",
+    "auto-loading"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=16.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.6.2",
+    "@testing-library/react": "^9.2.0",
+    "@types/jest": "^24.0.18",
+    "@types/react": "^16.9.2",
+    "@types/react-dom": "^16.9.1",
+    "@typescript-eslint/eslint-plugin": "^2.3.2",
+    "@typescript-eslint/parser": "^2.3.2",
+    "awesome-typescript-loader": "^5.2.1",
+    "babel-loader": "^8.0.6",
+    "eslint": "^6.5.1",
+    "eslint-config-prettier": "^6.3.0",
+    "eslint-plugin-react": "^7.15.0",
+    "husky": ">=1",
+    "jest": "^24.9.0",
+    "lint-staged": ">=8",
+    "prettier": "1.18.2",
+    "react": "^16.10.1",
+    "react-docgen-typescript-loader": "^3.2.1",
+    "react-dom": "^16.10.1",
+    "ts-jest": "^24.1.0",
+    "typescript": "^3.7.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn run ts-check && lint-staged"
+    }
+  }
+}
