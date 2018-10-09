@@ -1,9 +1,0 @@
-This is the note of my Git learning.
-
-1. git clone: https://github.com/username/repositoryname.git
-
-2. I heard that Atom is a very good text editor for git operations, maybe should have a try.
-
-3. If you make multiple commits, all of them will be pushed
-
-4. git rebase is dangerous.
