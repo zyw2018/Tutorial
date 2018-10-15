@@ -33,8 +33,8 @@ export default class AutoLoadingScroll extends Component<Props, State> {
       showLoader: false,
     };
 
-    this.onStart = this.onStart.bind(this);
-    this.onMove = this.onMove.bind(this);
+    this.handleBeginScrolling = this.handleBeginScrolling.bind(this);
+    this.handleScrolling = this.handleScrolling.bind(this);
     this.onEnd = this.onEnd.bind(this);
   }
 
@@ -44,10 +44,45 @@ export default class AutoLoadingScroll extends Component<Props, State> {
 
   private _ALScroll: HTMLDivElement | undefined;
   private _pullDown: HTMLDivElement | undefined;
+  private _scrollableNode: HTMLElement | undefined | null;
 
-  onStart: EventListener = (evt: Event) => {}
-  onMove: EventListener = (evt: Event) => {}
-  onEnd: EventListener = () => {}
+  private startY = 0;
+  private currentY = 0;
+  private dragging = false;
+
+  private maxPullDownDistance = 0;
+
+  handleBeginScrolling: EventListener = (evt: Event) => {
+    this.dragging = true;
+
+    if (evt instanceof MouseEvent) {
+      this.startY = evt.pageY;
+    } else if (evt instanceof TouchEvent) {
+      this.startY = evt.touches[0].pageY;
+    }
+    this.currentY = this.startY;
+
+    if (this._ALScroll) {
+      this._ALScroll.style.willChange = 'transform';
+      this._ALScroll.style.transition = `transform 0.2s cubic-bezier(0,0,0.32,1)`;
+    }
+  };
+
+  handleScrolling: EventListener = (evt: Event) => {
+    if (!this.dragging) return;
+
+    if (evt instanceof MouseEvent) {
+      this.currentY = evt.pageY;
+    } else if (evt instanceof TouchEvent) {
+      this.currentY = evt.touches[0].pageY;
+    }
+
+    if (this._ALScroll) {
+      this._ALScroll.style.overflow = 'visible';
+      this._ALScroll.style.transform = `translate3d(0px, ${this.currentY -
+        this.startY}px, 0px)`;
+    }
+  };
 
   render() {
     const style = {
