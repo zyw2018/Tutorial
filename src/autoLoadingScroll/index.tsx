@@ -35,7 +35,7 @@ export default class AutoLoadingScroll extends Component<Props, State> {
 
     this.handleBeginScrolling = this.handleBeginScrolling.bind(this);
     this.handleScrolling = this.handleScrolling.bind(this);
-    this.onEnd = this.onEnd.bind(this);
+    this.handleFinishScrolling = this.handleFinishScrolling.bind(this);
   }
 
   private actionTriggered = false;
@@ -82,6 +82,28 @@ export default class AutoLoadingScroll extends Component<Props, State> {
       this._ALScroll.style.transform = `translate3d(0px, ${this.currentY -
         this.startY}px, 0px)`;
     }
+  };
+
+  handleFinishScrolling: EventListener = () => {
+    this.startY = 0;
+    this.currentY = 0;
+
+    this.dragging = false;
+
+    if (this.state.pullToReloadThresholdBreached) {
+      this.props.reloadFunction && this.props.reloadFunction();
+      this.setState({
+        pullToReloadThresholdBreached: false,
+      });
+    }
+
+    requestAnimationFrame(() => {
+      if (this._ALScroll) {
+        this._ALScroll.style.overflow = 'auto';
+        this._ALScroll.style.transform = 'none';
+        this._ALScroll.style.willChange = 'unset';
+      }
+    });
   };
 
   render() {
