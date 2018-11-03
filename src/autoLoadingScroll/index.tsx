@@ -51,6 +51,13 @@ export default class AutoLoadingScroll extends Component<Props, State> {
 
   private maxPullDownDistance = 0;
 
+  getScrollableTarget = () => {
+    if (this.props.scrollableTarget instanceof HTMLElement)
+      return this.props.scrollableTarget;
+ 
+    return null;
+  };
+
   componentDidMount() {
     if (typeof this.props.dataLength === 'undefined') {
       throw new Error(
@@ -58,6 +65,7 @@ export default class AutoLoadingScroll extends Component<Props, State> {
       );
     }
 
+    this._scrollableNode = this.getScrollableTarget();
     this.el = this.props.height
       ? this._ALScroll
       : this._scrollableNode || window;
@@ -183,7 +191,7 @@ export default class AutoLoadingScroll extends Component<Props, State> {
                   position: 'absolute',
                   left: 0,
                   right: 0,
-                  }}
+                }}
               >
                 {this.state.pullToReloadThresholdBreached
                   && this.props.releaseToReloadContent}
