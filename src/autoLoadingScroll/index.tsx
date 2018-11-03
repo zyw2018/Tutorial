@@ -1,5 +1,4 @@
 import React, { Component, ReactNode, CSSProperties } from 'react';
-
 type Fn = () => any;
 
 export interface Props {
@@ -51,6 +50,42 @@ export default class AutoLoadingScroll extends Component<Props, State> {
   private dragging = false;
 
   private maxPullDownDistance = 0;
+
+  componentDidMount() {
+    if (typeof this.props.dataLength === 'undefined') {
+      throw new Error(
+        'Missing "dataLength" prop'
+      );
+    }
+
+    this.el = this.props.height
+      ? this._ALScroll
+      : this._scrollableNode || window;
+
+    if (this.props.pullDownToReload && this.el) {
+      this.el.addEventListener('touchstart', this.handleBeginScrolling);
+      this.el.addEventListener('touchmove', this.handleScrolling);
+      this.el.addEventListener('touchend', this.handleFinishScrolling);
+
+      this.el.addEventListener('mousedown', this.handleBeginScrolling);
+      this.el.addEventListener('mousemove', this.handleScrolling);
+      this.el.addEventListener('mouseup', this.handleFinishScrolling);
+
+      this.maxPullDownDistance =
+        (this._pullDown &&
+          this._pullDown.firstChild &&
+          (this._pullDown.firstChild as HTMLDivElement).getBoundingClientRect()
+            .height) ||
+        0;
+      this.forceUpdate();
+
+      if (typeof this.props.reloadFunction !== 'function') {
+        throw new Error(
+          'Miss function "ReloadFunction" as prop'
+        );
+      }
+    }
+  }
 
   handleBeginScrolling: EventListener = (evt: Event) => {
     this.dragging = true;
@@ -106,6 +141,23 @@ export default class AutoLoadingScroll extends Component<Props, State> {
     });
   };
 
+  onScrollListener = (event: MouseEvent) => {
+    if (typeof this.props.onScroll === 'function') {
+       setTimeout(() => this.props.onScroll && this.props.onScroll(event), 0);
+    }
+
+    const target =
+      this.props.height || this._scrollableNode
+        ? (event.target as HTMLElement)
+        : document.documentElement.scrollTop
+        ? document.documentElement
+        : document.body;
+
+    if (this.actionTriggered) return;
+
+    this.lastScrollTop = target.scrollTop;
+  };
+
   render() {
     const style = {
       height: this.props.height || 'auto',
@@ -131,7 +183,7 @@ export default class AutoLoadingScroll extends Component<Props, State> {
                   position: 'absolute',
                   left: 0,
                   right: 0,
-                }}
+                  }}
               >
                 {this.state.pullToReloadThresholdBreached
                   && this.props.releaseToReloadContent}
