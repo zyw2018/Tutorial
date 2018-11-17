@@ -1,4 +1,22 @@
 import React, { Component, ReactNode, CSSProperties } from 'react';
+import { throttle } from 'throttle-debounce';
+
+const defaultThreshold = {
+  unit: 'Percent',
+  value: 0.7,
+};
+
+function parseThreshold(scrollThreshold: number) {
+  if (typeof scrollThreshold === 'number') {
+    return {
+      unit: 'Percent',
+      value: scrollThreshold * 100,
+    };
+  }
+
+  return defaultThreshold;
+}
+
 type Fn = () => any;
 
 export interface Props {
@@ -32,6 +50,9 @@ export default class AutoLoadingScroll extends Component<Props, State> {
       showLoader: false,
     };
 
+    this.throttledOnScrollListener = throttle(120, this.onScrollListener).bind(
+      this
+    );
     this.handleBeginScrolling = this.handleBeginScrolling.bind(this);
     this.handleScrolling = this.handleScrolling.bind(this);
     this.handleFinishScrolling = this.handleFinishScrolling.bind(this);
@@ -40,6 +61,7 @@ export default class AutoLoadingScroll extends Component<Props, State> {
   private actionTriggered = false;
   private el: HTMLElement | undefined | Window & typeof globalThis;
   private lastScrollTop = 0;
+  private throttledOnScrollListener: (e: MouseEvent) => void;
 
   private _ALScroll: HTMLDivElement | undefined;
   private _pullDown: HTMLDivElement | undefined;
@@ -69,6 +91,11 @@ export default class AutoLoadingScroll extends Component<Props, State> {
     this.el = this.props.height
       ? this._ALScroll
       : this._scrollableNode || window;
+
+    if (this.el) {
+      this.el.addEventListener('scroll', this
+        .throttledOnScrollListener as EventListenerOrEventListenerObject);
+    }
 
     if (this.props.pullDownToReload && this.el) {
       this.el.addEventListener('touchstart', this.handleBeginScrolling);
@@ -149,6 +176,23 @@ export default class AutoLoadingScroll extends Component<Props, State> {
     });
   };
 
+  isElementAtBottom(
+    target: HTMLElement,
+    scrollThreshold: number = 0.7
+  ) {
+    const clientHeight =
+      target === document.body || target === document.documentElement
+        ? window.screen.availHeight
+        : target.clientHeight;
+
+    const threshold = parseThreshold(scrollThreshold);
+
+    return (
+      target.scrollTop + clientHeight >=
+      (threshold.value / 100) * target.scrollHeight
+    );
+  }
+
   onScrollListener = (event: MouseEvent) => {
     if (typeof this.props.onScroll === 'function') {
        setTimeout(() => this.props.onScroll && this.props.onScroll(event), 0);
@@ -162,6 +206,14 @@ export default class AutoLoadingScroll extends Component<Props, State> {
         : document.body;
 
     if (this.actionTriggered) return;
+
+    const atBottom = this.isElementAtBottom(target, this.props.scrollThreshold);
+
+    if (atBottom && this.props.hasMore) {
+      this.actionTriggered = true;
+      this.setState({ showLoader: true });
+      this.props.next && this.props.next();
+    }
 
     this.lastScrollTop = target.scrollTop;
   };
