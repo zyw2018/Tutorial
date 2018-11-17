@@ -122,7 +122,48 @@ export default class AutoLoadingScroll extends Component<Props, State> {
     }
   }
 
+  componentDidUpdate(prevProps: Props) {
+    if (this.props.dataLength === prevProps.dataLength) return;
+
+    this.actionTriggered = false;
+
+    this.setState({
+      showLoader: false,
+    });
+  }
+
+  static getDerivedStateFromProps(nextProps: Props, prevState: State) {
+    const dataLengthChanged = nextProps.dataLength !== prevState.prevDataLength;
+
+    if (dataLengthChanged) {
+      return {
+        ...prevState,
+        prevDataLength: nextProps.dataLength,
+      };
+    }
+    return null;
+  }
+
+  componentWillUnmount() {
+    if (this.el) {
+      this.el.removeEventListener('scroll', this
+        .throttledOnScrollListener as EventListenerOrEventListenerObject);
+
+      if (this.props.pullDownToReload) {
+        this.el.removeEventListener('touchstart', this.handleBeginScrolling);
+        this.el.removeEventListener('touchmove', this.handleScrolling);
+        this.el.removeEventListener('touchend', this.handleFinishScrolling);
+
+        this.el.removeEventListener('mousedown', this.handleBeginScrolling);
+        this.el.removeEventListener('mousemove', this.handleScrolling);
+        this.el.removeEventListener('mouseup', this.handleFinishScrolling);
+      }
+    }
+  }
+
   handleBeginScrolling: EventListener = (evt: Event) => {
+    if (this.lastScrollTop) return;
+
     this.dragging = true;
 
     if (evt instanceof MouseEvent) {
@@ -146,6 +187,8 @@ export default class AutoLoadingScroll extends Component<Props, State> {
     } else if (evt instanceof TouchEvent) {
       this.currentY = evt.touches[0].pageY;
     }
+
+    if (this.currentY < this.startY) return;
 
     if (this._ALScroll) {
       this._ALScroll.style.overflow = 'visible';
@@ -224,7 +267,7 @@ export default class AutoLoadingScroll extends Component<Props, State> {
       overflow: 'auto',
       WebkitOverflowScrolling: 'touch',
       } as CSSProperties;
-    return (
+        return (
       <div
         className="auto-loading-scroll-component__outerdiv"
       >
