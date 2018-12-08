@@ -221,7 +221,7 @@ export default class AutoLoadingScroll extends Component<Props, State> {
 
   isElementAtBottom(
     target: HTMLElement,
-    scrollThreshold: number = 0.7
+    scrollThreshold = 0.7
   ) {
     const clientHeight =
       target === document.body || target === document.documentElement
@@ -267,7 +267,14 @@ export default class AutoLoadingScroll extends Component<Props, State> {
       overflow: 'auto',
       WebkitOverflowScrolling: 'touch',
       } as CSSProperties;
-        return (
+    const hasChildren =
+      !!(
+        this.props.children &&
+        this.props.children instanceof Array &&
+        this.props.children.length
+      );
+
+    return (
       <div
         className="auto-loading-scroll-component__outerdiv"
       >
@@ -294,6 +301,8 @@ export default class AutoLoadingScroll extends Component<Props, State> {
             </div>
           )}
           {this.props.children}
+          {((!this.state.showLoader &&
+            !hasChildren) || (this.state.showLoader)) && this.props.hasMore && this.props.loader}
         </div>
       </div>
     );
