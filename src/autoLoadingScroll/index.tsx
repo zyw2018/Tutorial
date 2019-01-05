@@ -1,20 +1,20 @@
 import React, { Component, ReactNode, CSSProperties } from 'react';
 import { throttle } from 'throttle-debounce';
 
-const defaultThreshold = {
+const defaultBreakPoint = {
   unit: 'Percent',
   value: 0.7,
 };
 
-function parseThreshold(scrollThreshold: number) {
-  if (typeof scrollThreshold === 'number') {
+function getBreakPoint(scrollBreakPoint: number) {
+  if (typeof scrollBreakPoint === 'number') {
     return {
       unit: 'Percent',
-      value: scrollThreshold * 100,
+      value: scrollBreakPoint * 100,
     };
   }
 
-  return defaultThreshold;
+  return defaultBreakPoint;
 }
 
 type Fn = () => any;
@@ -31,37 +31,22 @@ export interface Props {
   releaseToReloadContent?: ReactNode;
   reloadFunction?: Fn;
   scrollableTarget?: ReactNode;
-  scrollThreshold?: number;
+  scrollBreakPoint?: number;
 }
 
 interface State {
-  prevDataLength: number | undefined;
-  pullToReloadThresholdBreached: boolean;
-  showLoader: boolean;
+  preDataLength: number | undefined;
+  pullToReloadBreakPointReached: boolean;
+  shouldShowLoading: boolean;
 }
 
 export default class AutoLoadingScroll extends Component<Props, State> {
-  constructor(props: Props) { 
-    super(props);
-
-    this.state = {
-      prevDataLength: props.dataLength,
-      pullToReloadThresholdBreached: false,
-      showLoader: false,
-    };
-
-    this.throttledOnScrollListener = throttle(120, this.onScrollListener).bind(
-      this
-    );
-    this.handleBeginScrolling = this.handleBeginScrolling.bind(this);
-    this.handleScrolling = this.handleScrolling.bind(this);
-    this.handleFinishScrolling = this.handleFinishScrolling.bind(this);
-  }
 
   private actionTriggered = false;
-  private el: HTMLElement | undefined | Window & typeof globalThis;
-  private lastScrollTop = 0;
-  private throttledOnScrollListener: (e: MouseEvent) => void;
+  private elem: HTMLElement | undefined | Window & typeof globalThis;
+  private preScrollTop = 0;
+  private scrollThrottleListener: (e: MouseEvent) => void;
+  private maxPullDownDistance = 0;
 
   private _ALScroll: HTMLDivElement | undefined;
   private _pullDown: HTMLDivElement | undefined;
@@ -71,7 +56,22 @@ export default class AutoLoadingScroll extends Component<Props, State> {
   private currentY = 0;
   private dragging = false;
 
-  private maxPullDownDistance = 0;
+  constructor(props: Props) { 
+    super(props);
+
+    this.state = {
+      preDataLength: props.dataLength,
+      pullToReloadBreakPointReached: false,
+      shouldShowLoading: false,
+    };
+
+    this.scrollThrottleListener = throttle(120, this.onScrollListener).bind(
+      this
+    );
+    this.handleBeginScrolling = this.handleBeginScrolling.bind(this);
+    this.handleScrolling = this.handleScrolling.bind(this);
+    this.handleFinishScrolling = this.handleFinishScrolling.bind(this);
+  }
 
   getScrollableTarget = () => {
     if (this.props.scrollableTarget instanceof HTMLElement)
@@ -88,23 +88,23 @@ export default class AutoLoadingScroll extends Component<Props, State> {
     }
 
     this._scrollableNode = this.getScrollableTarget();
-    this.el = this.props.height
+    this.elem = this.props.height
       ? this._ALScroll
       : this._scrollableNode || window;
 
-    if (this.el) {
-      this.el.addEventListener('scroll', this
-        .throttledOnScrollListener as EventListenerOrEventListenerObject);
+    if (this.elem) {
+      this.elem.addEventListener('scroll', this
+        .scrollThrottleListener as EventListenerOrEventListenerObject);
     }
 
-    if (this.props.pullDownToReload && this.el) {
-      this.el.addEventListener('touchstart', this.handleBeginScrolling);
-      this.el.addEventListener('touchmove', this.handleScrolling);
-      this.el.addEventListener('touchend', this.handleFinishScrolling);
+    if (this.props.pullDownToReload && this.elem) {
+      this.elem.addEventListener('touchstart', this.handleBeginScrolling);
+      this.elem.addEventListener('touchmove', this.handleScrolling);
+      this.elem.addEventListener('touchend', this.handleFinishScrolling);
 
-      this.el.addEventListener('mousedown', this.handleBeginScrolling);
-      this.el.addEventListener('mousemove', this.handleScrolling);
-      this.el.addEventListener('mouseup', this.handleFinishScrolling);
+      this.elem.addEventListener('mousedown', this.handleBeginScrolling);
+      this.elem.addEventListener('mousemove', this.handleScrolling);
+      this.elem.addEventListener('mouseup', this.handleFinishScrolling);
 
       this.maxPullDownDistance =
         (this._pullDown &&
@@ -128,41 +128,41 @@ export default class AutoLoadingScroll extends Component<Props, State> {
     this.actionTriggered = false;
 
     this.setState({
-      showLoader: false,
+      shouldShowLoading: false,
     });
   }
 
   static getDerivedStateFromProps(nextProps: Props, prevState: State) {
-    const dataLengthChanged = nextProps.dataLength !== prevState.prevDataLength;
+    const dataLengthChanged = nextProps.dataLength !== prevState.preDataLength;
 
     if (dataLengthChanged) {
       return {
         ...prevState,
-        prevDataLength: nextProps.dataLength,
+        preDataLength: nextProps.dataLength,
       };
     }
     return null;
   }
 
   componentWillUnmount() {
-    if (this.el) {
-      this.el.removeEventListener('scroll', this
-        .throttledOnScrollListener as EventListenerOrEventListenerObject);
+    if (this.elem) {
+      this.elem.removeEventListener('scroll', this
+        .scrollThrottleListener as EventListenerOrEventListenerObject);
 
       if (this.props.pullDownToReload) {
-        this.el.removeEventListener('touchstart', this.handleBeginScrolling);
-        this.el.removeEventListener('touchmove', this.handleScrolling);
-        this.el.removeEventListener('touchend', this.handleFinishScrolling);
+        this.elem.removeEventListener('touchstart', this.handleBeginScrolling);
+        this.elem.removeEventListener('touchmove', this.handleScrolling);
+        this.elem.removeEventListener('touchend', this.handleFinishScrolling);
 
-        this.el.removeEventListener('mousedown', this.handleBeginScrolling);
-        this.el.removeEventListener('mousemove', this.handleScrolling);
-        this.el.removeEventListener('mouseup', this.handleFinishScrolling);
+        this.elem.removeEventListener('mousedown', this.handleBeginScrolling);
+        this.elem.removeEventListener('mousemove', this.handleScrolling);
+        this.elem.removeEventListener('mouseup', this.handleFinishScrolling);
       }
     }
   }
 
   handleBeginScrolling: EventListener = (evt: Event) => {
-    if (this.lastScrollTop) return;
+    if (this.preScrollTop) return;
 
     this.dragging = true;
 
@@ -203,10 +203,10 @@ export default class AutoLoadingScroll extends Component<Props, State> {
 
     this.dragging = false;
 
-    if (this.state.pullToReloadThresholdBreached) {
+    if (this.state.pullToReloadBreakPointReached) {
       this.props.reloadFunction && this.props.reloadFunction();
       this.setState({
-        pullToReloadThresholdBreached: false,
+        pullToReloadBreakPointReached: false,
       });
     }
 
@@ -219,20 +219,20 @@ export default class AutoLoadingScroll extends Component<Props, State> {
     });
   };
 
-  isElementAtBottom(
+  isBottomReached(
     target: HTMLElement,
-    scrollThreshold = 0.7
+    scrollBreakPoint: number = 0.7
   ) {
     const clientHeight =
       target === document.body || target === document.documentElement
         ? window.screen.availHeight
         : target.clientHeight;
 
-    const threshold = parseThreshold(scrollThreshold);
+    const breakPoint = getBreakPoint(scrollBreakPoint);
 
     return (
       target.scrollTop + clientHeight >=
-      (threshold.value / 100) * target.scrollHeight
+      (breakPoint.value / 100) * target.scrollHeight
     );
   }
 
@@ -250,15 +250,15 @@ export default class AutoLoadingScroll extends Component<Props, State> {
 
     if (this.actionTriggered) return;
 
-    const atBottom = this.isElementAtBottom(target, this.props.scrollThreshold);
+    const isAtBottom = this.isBottomReached(target, this.props.scrollBreakPoint);
 
-    if (atBottom && this.props.hasMore) {
+    if (isAtBottom && this.props.hasMore) {
       this.actionTriggered = true;
-      this.setState({ showLoader: true });
+      this.setState({ shouldShowLoading: true });
       this.props.next && this.props.next();
     }
 
-    this.lastScrollTop = target.scrollTop;
+    this.preScrollTop = target.scrollTop;
   };
 
   render() {
@@ -293,16 +293,17 @@ export default class AutoLoadingScroll extends Component<Props, State> {
                   position: 'absolute',
                   left: 0,
                   right: 0,
+                  top: -1 * this.maxPullDownDistance,
                 }}
               >
-                {this.state.pullToReloadThresholdBreached
+                {this.state.pullToReloadBreakPointReached
                   && this.props.releaseToReloadContent}
               </div>
             </div>
           )}
           {this.props.children}
-          {((!this.state.showLoader &&
-            !hasChildren) || (this.state.showLoader)) && this.props.hasMore && this.props.loader}
+          {((!this.state.shouldShowLoading &&
+            !hasChildren) || (this.state.shouldShowLoading)) && this.props.hasMore && this.props.loader}
         </div>
       </div>
     );
