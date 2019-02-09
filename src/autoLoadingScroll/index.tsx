@@ -267,6 +267,12 @@ export default class AutoLoadingScroll extends Component<Props, State> {
       overflow: 'auto',
       WebkitOverflowScrolling: 'touch',
       } as CSSProperties;
+
+    const wrapperStyle =
+      this.props.pullDownToReload && this.props.height
+        ? { overflow: 'auto' }
+        : {};
+    
     const hasChildren =
       !!(
         this.props.children &&
@@ -276,7 +282,8 @@ export default class AutoLoadingScroll extends Component<Props, State> {
 
     return (
       <div
-        className="auto-loading-scroll-component__outerdiv"
+        className="auto-loading-scroll-component-wrapper"
+        style={wrapperStyle}
       >
         <div
           className={'auto-loading-scroll-component'}
