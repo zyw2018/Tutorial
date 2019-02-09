@@ -2,12 +2,21 @@
   "name": "auto-loading-scroll-component",
   "version": "1.0.0",
   "description": "An Auto Loading on Scroll component in react.",
+  "source": "src/autoLoadingScroll/index.tsx",
+  "main": "dist/index.js",
+  "unpkg": "dist/index.umd.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-   "lint": "eslint src\/**\/*.{ts,tsx,js,jsx}",
+    "build": "rimraf dist && rollup -c",
+    "codecov": "codecov",
+    "lint": "eslint src\/**\/*.{ts,tsx,js,jsx}",
     "lint:fix": "yarn lint --fix",
     "prettier:check": "prettier --check 'src/**/*'",
-    "prettify": "prettier --write 'src/**/*'"
-    },
+    "prettify": "prettier --write 'src/**/*'",
+    "ts-check": "tsc -p tsconfig.json --noEmit",
+    "test": "jest"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zyw2018/Tutorial.git"
@@ -29,6 +38,7 @@
     "@types/jest": "^24.0.18",
     "@types/react": "^16.9.2",
     "@types/react-dom": "^16.9.1",
+    "@types/throttle-debounce": "^2.1.0",
     "@typescript-eslint/eslint-plugin": "^2.3.2",
     "@typescript-eslint/parser": "^2.3.2",
     "awesome-typescript-loader": "^5.2.1",
@@ -43,12 +53,35 @@
     "react": "^16.10.1",
     "react-docgen-typescript-loader": "^3.2.1",
     "react-dom": "^16.10.1",
+    "rimraf": "^3.0.0",
+    "rollup": "^1.26.3",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-typescript2": "^0.25.2",
     "ts-jest": "^24.1.0",
     "typescript": "^3.7.2"
+  },
+  "dependencies": {
+    "throttle-debounce": "^2.1.0"
   },
   "husky": {
     "hooks": {
       "pre-commit": "yarn run ts-check && lint-staged"
     }
+  },
+  "lint-staged": {
+    "*.{js,css,json,md}": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.js": [
+      "prettier --write",
+      "eslint --fix",
+      "git add"
+    ],
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix",
+      "git add"
+    ]
   }
 }
